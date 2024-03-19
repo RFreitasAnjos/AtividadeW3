@@ -8,7 +8,7 @@ app.use(express.json());
 const conexao = mysql.createConnection({
   host: "localhost",
   user: "aluno",
-  password: "ifpecjbg",
+  password: "y",
   database: "aulaw3",
 });
 
@@ -178,6 +178,22 @@ app.get("/api/produtos", (req, res) => {
   });
 });
 
+app.get("/api/produtos/:nome", (req, res) => {
+  const { nome } = req.body
+  const sql = "SELECT * FROM Produtos WHERE nome=?";
+
+  conexao.query(sql, (erro, results) => {
+    if (erro) {
+      console.error("Erro ao buscar produto" + erro.message);
+      res.status(500).json({ error: "Erro ao buscar produto" });
+    } else {
+      console.log(sql);
+      res.status(200).json(results);
+    }
+  });
+});
+
+
 app.post("/api/insere/produtos", (req, res) => {
   const { nome, descricao, preco, id_categoria, disponivel } = req.body;
   const sql =
@@ -237,6 +253,80 @@ app.put("/api/altera/produtos/:id", (req, res) => {
     },
   );
 });
+
+//------------------------------------------------------------------//
+
+//------------------------------------------------------------------//
+//                           Pedidos                                //
+//------------------------------------------------------------------//
+
+app.get("/api/pedidos", (req,res) =>{
+  const sql = "SELECT * FROM pedidos";
+
+  conexao.query(sql, (erro,results) =>{
+    if(erro) {
+      console.error("Erro ao localizar o pedido" + erro.message)
+      res.status(500).json({ error: "Erro ao localizar o pedido"})
+    }else{
+      console.log(sql);
+      res.status(200).json(results);
+    }
+  })
+});
+
+app.post("/api/realizapedidos",(req,res) =>{
+  const sql = "INSERT INTO pedido (id_pedido, id_produto,quantidade,preco_unitario) VALUES (?,?,?,?)";
+  conexao.query(sql,[],(erro,results) =>{
+    if(erro) {
+      console.error("Erro ao realizar o pedido" + erro.message);
+      res.status(500).json({ error: "Erro ao realizar o pedido"});
+    } else{
+      console.log("Pedido realizado com sucesso");
+      res.status(201).json({ message: "Produto realizado com sucesso"});
+    }
+  });
+});
+
+app.put("/api/alterapedido/:id",(req,res) =>{
+  const { id } = req.params;
+  const { id_produto,quantidade,preco,preco_unitario } = req.body;
+
+  const sql = "UPDATE pedidos SET id_produto = ?, quantidade = ?, preco = ?, preco_unitario = ? where id=?";
+  conexao.sql(sql,[],(erro,results) => {
+      if(erro){
+        console.error("Erro ao alterar pedido" + erro.message)
+        res.status(500).json({ error: "Erro ao alterar pedido" });
+      }else{
+        console.log(sql);
+        res.status(200).json({message: "Pedido alterado com sucesso"});
+      }
+  });
+});
+
+app.delete("/api/deletapedido/:id",(req,res) =>{
+  const { id } = req.params;
+  
+  const sql = "DELETE FROM pedidos WHERE id=?"
+  conexao.query(sql,[id],(erro,results) =>{
+    if(erro) {
+      console.error("Erro ao deletar pedido" + erro.message);
+      res.status(500).json({ error: "Erro ao deletar pedido"});
+    } else{
+      if (results.affectedRows > 0){
+        console.log("Pedido deletado com sucesso");
+        res.status(200).json({ message: "Pedido deletado com sucesso"})
+      } else{
+        console.log("Pedido nao localizado");
+        res.status(404).json({ message: "Pedido nao encontrado"})
+      }
+    }
+  });
+});
+
+
+
+
+
 
 //------------------------------------------------------------------//
 const PORT = process.env.PORT || 3000;
